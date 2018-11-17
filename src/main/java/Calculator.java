@@ -7,5 +7,5 @@ public interface Calculator{
 
     void execute(String input);
 
-    boolean addOperator(CalculationOperator calculationOperator);
+    boolean addOperator(String sign, int count, Class<? extends CalculatorCommand> command);
 }

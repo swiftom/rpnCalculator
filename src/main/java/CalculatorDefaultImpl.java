@@ -34,13 +34,32 @@ public class CalculatorDefaultImpl implements Calculator {
 
 
     public CalculatorDefaultImpl() {
-        supportedOperators = new HashMap<>();
+        this.supportedOperators = new HashMap<>();
+        this.addOperator("+", 2, AddCommand.class);
+        this.addOperator("-", 2, SubstractCommand.class);
+        this.addOperator("*", 2, MultiplicationCmd.class);
+        this.addOperator("/", 2, DivideCommand.class);
+        this.addOperator("sqrt", 1, SqrtCommand.class);
+        this.addOperator("undo", 0, UndoCommand.class);
+        this.addOperator("clear", 0, ClearCommand.class);
+
+        this.operandPredicate = s -> s.matches("^(\\-)?[0-9]+(.[0-9]+)?$");
+
+        this.maintainer = new CalculaterMaintainerImpl();
     }
 
     public CalculatorDefaultImpl(CalculatorStateMaintainer maintainer, Predicate<String> predicate) {
         this.maintainer = maintainer;
-        supportedOperators = new HashMap<>();
         this.operandPredicate = predicate;
+
+        this.supportedOperators = new HashMap<>();
+        this.addOperator("+", 2, AddCommand.class);
+        this.addOperator("-", 2, SubstractCommand.class);
+        this.addOperator("*", 2, MultiplicationCmd.class);
+        this.addOperator("/", 2, DivideCommand.class);
+        this.addOperator("sqrt", 1, SqrtCommand.class);
+        this.addOperator("undo", 0, UndoCommand.class);
+        this.addOperator("clear", 0, ClearCommand.class);
     }
 
     @Override
@@ -197,13 +216,12 @@ public class CalculatorDefaultImpl implements Calculator {
     }
 
     @Override
-    public boolean addOperator(CalculationOperator calculationOperator) {
-        if (calculationOperator == null ||
-                calculationOperator.getSign() == null ||
-                calculationOperator.getCmdClass() == null) {
+    public boolean addOperator(String sign, int count, Class<? extends CalculatorCommand> command) {
+        if (sign == null || "".equals(sign.trim()) || count < 0 || command == null) {
             return false;
-
         }
+
+        CalculationOperator calculationOperator = new CalculationOperator(sign, count, command);
         if (supportedOperators.containsKey(calculationOperator.getSign())) {
             return false;
         }
@@ -305,12 +323,10 @@ public class CalculatorDefaultImpl implements Calculator {
             return null;
         }
 
-        Class<? extends AbstractCalculatorCommand> klass = calculationOperator.getCmdClass();
+        Class<? extends CalculatorCommand> klass = calculationOperator.getCmdClass();
         if (klass != null) {
             try {
-                AbstractCalculatorCommand newCmd = klass.newInstance();
-                newCmd.setSign(calculationOperator.getSign());
-                newCmd.setOperandsCount(calculationOperator.getOperandsCount());
+                CalculatorCommand newCmd = klass.newInstance();
                 newCmd.setCalculatorStateMaintainer(maintainer);
                 return newCmd;
             } catch (Exception e) {

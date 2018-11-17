@@ -1,19 +1,8 @@
 import java.util.*;
-import java.util.function.Predicate;
 
 public class CalculatorTest {
     public static void main(String[] args) {
-        CalculatorStateMaintainer maintainer = new CalculaterMaintainerImpl();
-        Predicate<String> normalPredicate = s -> s.matches("^(\\-)?[0-9]+(.[0-9]+)?$");
-        Calculator calculator = new CalculatorDefaultImpl(maintainer, normalPredicate);
-
-        calculator.addOperator(new CalculationOperator("+", 2, AddCommand.class));
-        calculator.addOperator(new CalculationOperator("-", 2, SubstractCommand.class));
-        calculator.addOperator(new CalculationOperator("*", 2, MultiplicationCmd.class));
-        calculator.addOperator(new CalculationOperator("/", 2, DivideCommand.class));
-        calculator.addOperator(new CalculationOperator("sqrt", 1, SqrtCommand.class));
-        calculator.addOperator(new CalculationOperator("undo", 0, UndoCommand.class));
-        calculator.addOperator(new CalculationOperator("clear", 0, ClearCommand.class));
+        Calculator calculator = new CalculatorDefaultImpl();
 
         calculator.start();
     }

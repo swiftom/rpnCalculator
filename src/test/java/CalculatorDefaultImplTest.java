@@ -3,24 +3,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.function.Predicate;
-
 public class CalculatorDefaultImplTest {
    static CalculatorDefaultImpl calculator ;
 
     @BeforeClass
     public static void runBefore() {
-        CalculatorStateMaintainer maintainer = new CalculaterMaintainerImpl();
-        Predicate<String> normalPredicate = s -> s.matches("^(\\-)?[0-9]+(.[0-9]+)?$");
-        calculator = new CalculatorDefaultImpl(maintainer, normalPredicate);
-
-        calculator.addOperator(new CalculationOperator("+", 2, AddCommand.class));
-        calculator.addOperator(new CalculationOperator("-", 2, SubstractCommand.class));
-        calculator.addOperator(new CalculationOperator("*", 2, MultiplicationCmd.class));
-        calculator.addOperator(new CalculationOperator("/", 2, DivideCommand.class));
-        calculator.addOperator(new CalculationOperator("sqrt", 1, SqrtCommand.class));
-        calculator.addOperator(new CalculationOperator("undo", 0, UndoCommand.class));
-        calculator.addOperator(new CalculationOperator("clear", 0, ClearCommand.class));
+        calculator = new CalculatorDefaultImpl();
     }
 
     @Before

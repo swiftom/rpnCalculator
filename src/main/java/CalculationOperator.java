@@ -10,6 +10,6 @@ public class CalculationOperator {
     //how many operands needed for the operator
     private int operandsCount;
 
-    private Class<? extends AbstractCalculatorCommand> cmdClass;
+    private Class<? extends CalculatorCommand> cmdClass;
 
 }

@@ -4,16 +4,8 @@ import lombok.Setter;
 
 @NoArgsConstructor
 public abstract class AbstractCalculatorCommand implements CalculatorCommand {
-    //math notation
     @Getter
     @Setter
-    private String sign;
-
-    //how many operands needed for the operator
-    @Getter
-    @Setter
-    private int operandsCount;
-
     protected CalculatorStateMaintainer calculatorStateMaintainer;
 
     //all operands for calculation
@@ -33,10 +25,8 @@ public abstract class AbstractCalculatorCommand implements CalculatorCommand {
 
     public static final String NaN_RESULT = "NaN";
 
-    protected AbstractCalculatorCommand(CalculatorStateMaintainer cal, String sign, int count) {
+    protected AbstractCalculatorCommand(CalculatorStateMaintainer cal) {
         this.calculatorStateMaintainer = cal;
-        this.sign = sign;
-        this.operandsCount = count;
     }
 
     protected AbstractCalculatorCommand(CalculatorStateMaintainer cal, String... opArray) {
@@ -84,10 +74,6 @@ public abstract class AbstractCalculatorCommand implements CalculatorCommand {
         opArray = ops;
     }
 
-    @Override
-    public void setCalculatorStateMaintainer(CalculatorStateMaintainer maintainer) {
-        this.calculatorStateMaintainer = maintainer;
-    }
 
     protected abstract String doExecute();
 }
