@@ -6,6 +6,4 @@ public interface Calculator{
     void reset();
 
     void execute(String input);
-
-    boolean addOperator(String sign, int count, Class<? extends CalculatorCommand> command);
 }

@@ -43,13 +43,13 @@ public class CalculatorDefaultImpl implements Calculator {
         this.addOperator("undo", 0, UndoCommand.class);
         this.addOperator("clear", 0, ClearCommand.class);
 
-        this.operandPredicate = s -> s.matches("^(\\-)?[0-9]+(.[0-9]+)?$");
+        this.operandPredicate = s -> s.matches("^(-)?[0-9]+(.[0-9]+)?$");
 
-        this.maintainer = new CalculaterMaintainerImpl();
+        this.maintainer = new CalculatorStateMaintainer();
     }
 
-    public CalculatorDefaultImpl(CalculatorStateMaintainer maintainer, Predicate<String> predicate) {
-        this.maintainer = maintainer;
+    public CalculatorDefaultImpl(Predicate<String> predicate) {
+        this.maintainer = new CalculatorStateMaintainer();
         this.operandPredicate = predicate;
 
         this.supportedOperators = new HashMap<>();
@@ -64,7 +64,7 @@ public class CalculatorDefaultImpl implements Calculator {
 
     @Override
     public void start() {
-        assert (maintainer != null &&operandPredicate != null && supportedOperators != null && supportedOperators.size() > 0);
+        assert (maintainer != null && operandPredicate != null && supportedOperators != null && supportedOperators.size() > 0);
         isRunning = true;
 
         InputStreamReader inputStreamReader = new InputStreamReader(System.in);
@@ -126,7 +126,7 @@ public class CalculatorDefaultImpl implements Calculator {
 
         String[] operands = maintainer.getAllOperands();
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (String op : operands) {
             sb.append(formatOperand(op));
             sb.append(" ");
@@ -135,34 +135,35 @@ public class CalculatorDefaultImpl implements Calculator {
         return sb.toString().trim();
     }
 
-    private CalculatorCommand constructCommand(OpAndPos opAndPos) {
+    protected CalculatorCommand constructCommand(OpAndPos opAndPos) {
         CalculatorCommand cmd;
         String opStr = opAndPos.getOpStr();
 
-        if (opAndPos.isOperator()) {
-            cmd = buildOperatorCommand(opStr);
-            if (cmd == null) {
-                System.out.println("operator: " + opStr + " is not supported.");
-                return null;
-            }
+        if (!opAndPos.isOperator()) {
+            //is operand
+            return new OperandPushCommand(maintainer, opStr);
+        }
 
-            int num = supportedOperators.get(opStr).getOperandsCount();
-            if (num > 0 && maintainer.getOperandsSize() < num) {
-                System.out.println("operator " + opStr + " (position:" + opAndPos.getPos() + "): insufficient parameters");
-                return null;
-            }
+        cmd = buildOperatorCommand(opStr);
+        if (cmd == null) {
+            System.out.println("operator: " + opStr + " is not supported.");
+            return null;
+        }
 
-            if (num > 0) {
-                String[] operands = new String[num];
-                while (num-- > 0) {
-                    operands[num] = maintainer.pop();
-                }
-                cmd.setOperands(operands);
-            }
+        int num = supportedOperators.get(opStr).getOperandsCount();
+        if (num > 0 && maintainer.getOperandsSize() < num) {
+            System.out.println("operator " + opStr + " (position:" + opAndPos.getPos() + "): insufficient parameters");
+            return null;
+        }
 
-        } else {
-            cmd = new OperandPushCommand(opStr);
-            cmd.setCalculatorStateMaintainer(maintainer);
+        String[] operands = new String[num];
+        while (num-- > 0) {
+            operands[num] = maintainer.pop();
+        }
+
+        if (cmd instanceof AbstractCalculatorCommand) {
+            ((AbstractCalculatorCommand) cmd).setOpArray(operands);
+            ((AbstractCalculatorCommand) cmd).setCalculatorStateMaintainer(maintainer);
         }
 
         return cmd;
@@ -171,7 +172,7 @@ public class CalculatorDefaultImpl implements Calculator {
     private void displayCurrentState() {
         String[] operands = maintainer.getAllOperands();
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("stack:");
         for (String op : operands) {
             sb.append(formatOperand(op));
@@ -215,7 +216,6 @@ public class CalculatorDefaultImpl implements Calculator {
         return result;
     }
 
-    @Override
     public boolean addOperator(String sign, int count, Class<? extends CalculatorCommand> command) {
         if (sign == null || "".equals(sign.trim()) || count < 0 || command == null) {
             return false;
@@ -235,7 +235,7 @@ public class CalculatorDefaultImpl implements Calculator {
     private static class OpAndPos {
         int pos;
         String opStr;
-        boolean isOperator = false;
+        boolean isOperator;
     }
 
     private List<OpAndPos> parseInput(String input) {
@@ -245,12 +245,11 @@ public class CalculatorDefaultImpl implements Calculator {
 
         int i = 0;
         int len = input.length();
-        List<OpAndPos> opAndPosList = new ArrayList<OpAndPos>();
+        List<OpAndPos> opAndPosList = new ArrayList<>();
 
         while (i < len) {
             if (String.valueOf(input.charAt(i)).equals(delimiter)) {
                 i++;
-                continue;
             } else {
                 int startPos = i;
                 while (++i < len && !(String.valueOf(input.charAt(i)).equals(delimiter))) {
@@ -309,8 +308,8 @@ public class CalculatorDefaultImpl implements Calculator {
         //re-push OperandPushCommands of left operands for undo
         String[] operands = maintainer.getAllOperands();
         if (operands.length > 0) {
-            for (int i = 0; i < operands.length; i++) {
-                CalculatorCommand cmd = new OperandPushCommand(maintainer, operands[i]);
+            for (String operand: operands) {
+                CalculatorCommand cmd = new OperandPushCommand(maintainer, operand);
                 maintainer.pushCmd(cmd);
             }
         }
@@ -326,9 +325,7 @@ public class CalculatorDefaultImpl implements Calculator {
         Class<? extends CalculatorCommand> klass = calculationOperator.getCmdClass();
         if (klass != null) {
             try {
-                CalculatorCommand newCmd = klass.newInstance();
-                newCmd.setCalculatorStateMaintainer(maintainer);
-                return newCmd;
+                return klass.newInstance();
             } catch (Exception e) {
             }
         }

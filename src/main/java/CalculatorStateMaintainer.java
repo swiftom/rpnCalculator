@@ -1,24 +1,66 @@
-public interface CalculatorStateMaintainer {
-    //push operand
-    void push(String op);
+import java.util.*;
 
-    //pop operand
-    String pop();
+public class CalculatorStateMaintainer {
+    private Deque<String> operandStack;
 
-    //push command
-    void pushCmd(CalculatorCommand cmd);
+    private Deque<CalculatorCommand> cmdStack;
 
-    //pop command
-    CalculatorCommand popCmd();
+    public CalculatorStateMaintainer() {
+        cmdStack = new ArrayDeque<>();
+        operandStack = new ArrayDeque<>();
+    }
 
-    void undoLastCmd();
 
-    String[] getAllOperands();
+    public void push(String op) {
+        operandStack.push(op);
+    }
 
-    int getOperandsSize();
+    public String pop() {
+        return operandStack.pop();
+    }
 
-    //clear all operands
-    void clear();
+    public void pushCmd(CalculatorCommand cmd) {
+        cmdStack.push(cmd);
+    }
 
-    void clearAllCmds();
+    public CalculatorCommand popCmd() {
+        return cmdStack.pop();
+    }
+
+    public void undoLastCmd() {
+        if (cmdStack.size() > 0) {
+            CalculatorCommand cmd = cmdStack.pop();
+            cmd.undo();
+        }
+    }
+
+
+    public int getOperandsSize() {
+        return operandStack.size();
+    }
+
+    public String[] getAllOperands() {
+        int size = getOperandsSize();
+        if (size > 0) {
+            int i = 0;
+            String[] leftOps = new String[size];
+            Iterator<String> iterator = operandStack.descendingIterator();
+            while (iterator.hasNext()) {
+                leftOps[i++] = iterator.next();
+            }
+
+            return leftOps;
+        }
+
+        return new String[0];
+    }
+
+    public void clear() {
+        operandStack.clear();
+    }
+
+    public void clearAllCmds() {
+        cmdStack.clear();
+    }
+
 }

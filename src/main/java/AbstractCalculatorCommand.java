@@ -1,11 +1,9 @@
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+@Data
 @NoArgsConstructor
 public abstract class AbstractCalculatorCommand implements CalculatorCommand {
-    @Getter
-    @Setter
     protected CalculatorStateMaintainer calculatorStateMaintainer;
 
     //all operands for calculation
@@ -68,12 +66,6 @@ public abstract class AbstractCalculatorCommand implements CalculatorCommand {
         }
 
     }
-
-    @Override
-    public void setOperands(String... ops) {
-        opArray = ops;
-    }
-
 
     protected abstract String doExecute();
 }
